@@ -9,7 +9,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.filter.FilterAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.terms.TermsBuilder;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 
 import com.facebook.presto.sql.tree.AstVisitor;
 import com.facebook.presto.sql.tree.Expression;
@@ -17,9 +17,9 @@ import com.facebook.presto.sql.tree.GroupingElement;
 
 import nl.anchormen.sql4es.QueryState;
 import nl.anchormen.sql4es.model.Column;
+import nl.anchormen.sql4es.model.Column.Operation;
 import nl.anchormen.sql4es.model.Heading;
 import nl.anchormen.sql4es.model.Utils;
-import nl.anchormen.sql4es.model.Column.Operation;
 
 /**
  * A Presto {@link AstVisitor} implementation that parses GROUP BY clauses
@@ -29,7 +29,7 @@ import nl.anchormen.sql4es.model.Column.Operation;
  */
 public class GroupParser extends SelectParser {
 	
-	public TermsBuilder parse(List<GroupingElement> elements, QueryState state){
+	public TermsAggregationBuilder parse(List<GroupingElement> elements, QueryState state){
 		List<Column> groups = new ArrayList<Column>();
 		for(GroupingElement grouping : elements){
 			for(Set<Expression> expressions : grouping.enumerateGroupingSets()){
@@ -66,9 +66,9 @@ public class GroupParser extends SelectParser {
 	 * @param metrics
 	 * @return
 	 */
-	private TermsBuilder buildAggregationQuery(List<Column> aggs, int index, QueryState state){
+	private TermsAggregationBuilder buildAggregationQuery(List<Column> aggs, int index, QueryState state){
 		Column agg = aggs.get(index);
-		TermsBuilder result = null;
+		TermsAggregationBuilder result = null;
 		if(aggs.get(index).getOp() == Operation.NONE){
 			result = AggregationBuilders.terms(agg.getAggName()).field(agg.getColumn());
 			result.size(state.getIntProp(Utils.PROP_FETCH_SIZE, 10000));
@@ -82,7 +82,7 @@ public class GroupParser extends SelectParser {
 	 * Adds a Filtered Aggregation used to aggregate all results for a query without having a Group By
 	 */
 	public FilterAggregationBuilder buildFilterAggregation(QueryBuilder query, Heading heading){
-		FilterAggregationBuilder filterAgg = AggregationBuilders.filter("filter").filter(query);
+		FilterAggregationBuilder filterAgg = new FilterAggregationBuilder("filter", query);
 		addMetrics(filterAgg, heading, false);
 		return filterAgg;
 	}
@@ -109,7 +109,7 @@ public class GroupParser extends SelectParser {
 		}
 	}
 	
-	public TermsBuilder addDistinctAggregation(QueryState state){
+	public TermsAggregationBuilder addDistinctAggregation(QueryState state){
 		List<Column> distinct = new ArrayList<Column>();
 		for(Column s : state.getHeading().columns()){
 			if(s.getOp() == Operation.NONE && s.getCalculation() == null) distinct.add(s);
@@ -118,7 +118,7 @@ public class GroupParser extends SelectParser {
 	}
 	
 	public FilterAggregationBuilder addCountDistinctAggregation(QueryState state){
-		FilterAggregationBuilder result = AggregationBuilders.filter("cardinality_aggs").filter(QueryBuilders.matchAllQuery());
+		FilterAggregationBuilder result = new FilterAggregationBuilder("cardinality_aggs", QueryBuilders.matchAllQuery());
 		for(Column col : state.getHeading().columns()){
 			result.subAggregation( AggregationBuilders.cardinality(col.getLabel()).field(col.getColumn()).precisionThreshold(state.getIntProp(Utils.PROP_PRECISION_THRESHOLD, 3000)) );
 		}

@@ -278,7 +278,7 @@ public class QueryParser extends AstVisitor<ParseResult, Object>{
 		sorts.addAll(top.getSorts());
 		boolean useCache = top.getUseCache() || nested.getUseCache();
 		QueryBuilder aggQuery = nested.getQuery();
-		AbstractAggregationBuilder agg = nested.getAggregation();
+		AggregationBuilder agg = nested.getAggregation();
 		IComparison having = nested.getHaving();
 		
 		Heading head = new Heading();
@@ -321,7 +321,7 @@ public class QueryParser extends AstVisitor<ParseResult, Object>{
 		if(query instanceof MatchAllQueryBuilder) query = nested.getQuery();
 		else if(!(nested.getQuery() instanceof MatchAllQueryBuilder)) query = QueryBuilders.boolQuery().must(top.getQuery()).must(nested.getQuery());
 		
-		AbstractAggregationBuilder agg = top.getAggregation();
+		AggregationBuilder agg = top.getAggregation();
 		IComparison having = top.getHaving();
 		Heading head = new Heading();
 		if(nested.getHeading().hasAllCols()){

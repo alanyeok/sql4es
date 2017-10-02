@@ -60,11 +60,13 @@ public class ESDriver implements Driver{
 			String host = uri.getHost();
 			int port = (uri.getPort() < 0 ? Utils.PORT : uri.getPort());
 			String index = uri.getPath().length() <= 1 ? null : uri.getPath().split("/")[1];
+			/*
 			Properties props = Utils.defaultProps();
 			if(info != null) {
 				props.putAll(info);
 			}
 			info = props;
+			*/
 			if(uri.getQuery() != null) 
 				for(String keyValue : uri.getQuery().split("&")){
 					String[] parts = keyValue.split("=");

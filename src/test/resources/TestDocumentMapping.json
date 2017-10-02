@@ -21,8 +21,8 @@
 		"text": {
 			"type" : "multi_field",
                 "fields" : {
-                    "text" : {"type" : "string", "index" : "not_analyzed"},
-                    "analyzed" : {"type" : "string", "index" : "analyzed", "analyzer" : "simple"}
+                    "text" : {"type" : "keyword" },
+                    "analyzed" : {"type" : "text" }
                 }
 		},
 		"date" : {

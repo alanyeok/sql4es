@@ -14,6 +14,7 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 
 import com.facebook.presto.sql.tree.Explain;
@@ -22,10 +23,10 @@ import com.facebook.presto.sql.tree.QueryBody;
 
 import nl.anchormen.sql4es.jdbc.ESStatement;
 import nl.anchormen.sql4es.model.Column;
+import nl.anchormen.sql4es.model.Column.Operation;
 import nl.anchormen.sql4es.model.Heading;
 import nl.anchormen.sql4es.model.OrderBy;
 import nl.anchormen.sql4es.model.Utils;
-import nl.anchormen.sql4es.model.Column.Operation;
 import nl.anchormen.sql4es.model.expression.IComparison;
 import nl.anchormen.sql4es.parse.se.SearchAggregationParser;
 import nl.anchormen.sql4es.parse.se.SearchHitParser;
@@ -104,8 +105,11 @@ public class ESQueryState{
 		// add highlighting
 		for(Column column : heading.columns()){
 			if(column.getOp() == Operation.HIGHLIGHT){
-				request.addHighlightedField(column.getColumn(), Utils.getIntProp(props, Utils.PROP_FRAGMENT_SIZE, 100), 
-						Utils.getIntProp(props, Utils.PROP_FRAGMENT_NUMBER, 1));
+			    HighlightBuilder highlightBuilder = new HighlightBuilder()
+			            .field(column.getColumn())
+			            .fragmentSize(Utils.getIntProp(props, Utils.PROP_FRAGMENT_SIZE, 100))
+			            .numOfFragments(Utils.getIntProp(props, Utils.PROP_FRAGMENT_NUMBER, 1));
+			    request.highlighter(highlightBuilder);
 			}
 		}
 	}
@@ -193,9 +197,9 @@ public class ESQueryState{
 	 */
 	ResultSet execute(boolean useLateral) throws SQLException{
 		if(request == null) throw new SQLException("Unable to execute query because it has not correctly been parsed");
-		//System.out.println(request);
+		System.out.println(request);
 		this.esResponse = this.request.execute().actionGet();
-		//System.out.println(esResponse);
+		System.out.println(esResponse);
 		ESResultSet rs = convertResponse(useLateral);
 		if(rs == null) throw new SQLException("No result found for this query");
 		if(this.result != null) this.result.close();

@@ -2,7 +2,7 @@ Elastic announced the great news that they are workong on SQL support at Elastic
 
 ### sql4es: JDBC driver for Elasticsearch
 
-Sql-for-Elasticsearch (sql4es) is a jdbc 4.1 driver for **Elasticsearch 2.0 - 2.4** implementing the majority of the JDBC interfaces: Connection, Statement, PreparedStatment, ResultSet, Batch and DataBase- /  ResultSetMetadata. The screenshot below shows SQLWorkbenchJ with a selection of SQL statements that can be executed using the driver. As of version 0.8.2.3 the driver supports Shield allowing the use of credentials and SSL.
+Sql-for-Elasticsearch (sql4es) is a jdbc 4.1 driver for **Elassandra 5.5** implementing the majority of the JDBC interfaces: Connection, Statement, PreparedStatment, ResultSet, Batch and DataBase- /  ResultSetMetadata. The screenshot below shows SQLWorkbenchJ with a selection of SQL statements that can be executed using the driver. As of version 0.8.2.3 the driver supports Shield allowing the use of credentials and SSL.
 
 ![SQLWorkbenchJ screenshot with examples](release/workbench_examples.png)
 
@@ -34,18 +34,18 @@ rs.close();
 con.close();
 ```
 
-The driver can also be used from applications able to load the jdbc driver. It has been tested with [sqlWorkbench/J](http://www.sql-workbench.net/) and [Squirrel](http://squirrel-sql.sourceforge.net/) on an Elasticsearch 2.3 cluster. A description on how to use sql4es with sqlWorkbenchJ along with a number of example queries can be found at the bottom of this readme.
+The driver can also be used from applications able to load the jdbc driver. It has been tested with [sqlWorkbench/J](http://www.sql-workbench.net/) and [Squirrel](http://squirrel-sql.sourceforge.net/) on an **Elassandra 5.5.x** cluster. A description on how to use sql4es with sqlWorkbenchJ along with a number of example queries can be found at the bottom of this readme.
 
-As of version 0.8.2.3 the driver supports **Shield**. The following URL prameters must be set in order to use shield:
+As of version 0.9.2.5 the driver supports **Elassandra Enterprise Plugin**. The following URL prameters must be set in order to use shield:
 
-* shield.user='username:password' to set global credentials
-* ssl (enables SSL)
+* aaa.credential='username:password' to set global credentials
+* ssl.* (See Elassandra SSL properties)
 * cluster.name='elastic cloud cluster id' (only applies when connecting with a cluster in the Elastic Cloud)
 
 The example below is used to connect with a Shield protected cluster in the Elastic Cloud using SSL.
 
 ```scala
-Connection con = DriverManager.getConnection("jdbc:sql4es://f03c93be1efeb9be9b2f46b660d10d90.eu-west-1.aws.found.io:9343/indexname?shield.user=username:password&cluster.name=f03c93be1efeb9be9b2f46b660d10d90&ssl");
+Connection con = DriverManager.getConnection("jdbc:sql4es://f03c93be1efeb9be9b2f46b660d10d90.eu-west-1.aws.found.io:9343/indexname?aaa.credential=username:password&cluster.name=f03c93be1efeb9be9b2f46b660d10d90&ssl.transport.enabled=true&ssl.trust_all_cert=true");
 ```
 
 

@@ -4,6 +4,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.InternalAggregation;
 import org.elasticsearch.search.aggregations.bucket.filter.InternalFilter;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.metrics.InternalNumericMetricsAggregation;
@@ -11,8 +12,8 @@ import org.elasticsearch.search.aggregations.metrics.cardinality.InternalCardina
 
 import nl.anchormen.sql4es.ESResultSet;
 import nl.anchormen.sql4es.model.Column;
-import nl.anchormen.sql4es.model.Utils;
 import nl.anchormen.sql4es.model.Column.Operation;
+import nl.anchormen.sql4es.model.Utils;
 
 /**
  * Parses aggregation part of elasticsearch result. 
@@ -67,7 +68,7 @@ public class SearchAggregationParser {
 					String metricName = agg.getName();
 					if(!rs.getHeading().hasLabel(metricName)) throw new SQLException("Unable to identify column for aggregation named "+metricName);
 					Column metricCol = rs.getHeading().getColumnByLabel(metricName);
-					currentRow.set(metricCol.getIndex(), agg.getProperty("value"));
+					currentRow.set(metricCol.getIndex(), ((InternalAggregation)agg).getProperty("value"));
 				}
 			}
 			if(metricAggs){

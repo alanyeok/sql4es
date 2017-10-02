@@ -20,6 +20,7 @@ import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Struct;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,10 +32,11 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
-import org.elasticsearch.shield.ShieldPlugin;
 import org.elasticsearch.test.ESIntegTestCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.strapdata.elasticsearch.plugin.ssl.PreBuiltSslTransportClient;
 
 import nl.anchormen.sql4es.ESDatabaseMetaData;
 import nl.anchormen.sql4es.model.Heading;
@@ -93,22 +95,44 @@ public class ESConnection implements Connection{
 		if(props.containsKey("test")){ // used for integration tests
 			return ESIntegTestCase.client();
 		}else try {
-			Settings.Builder settingsBuilder = Settings.settingsBuilder();
+			Settings.Builder settingsBuilder = Settings.builder();
+			/*
 			for(Object key : this.props.keySet()){
 				settingsBuilder.put(key, this.props.get(key));
 			}
 			if(props.containsKey("cluster.name")){
 				settingsBuilder.put("request.headers.X-Found-Cluster", props.get("cluster.name"));
 			}
-			if(props.containsKey("ssl")){
-				settingsBuilder.put("shield.transport.ssl", true);
+			*/
+			for(String key : this.props.stringPropertyNames()) {
+			    if (key.startsWith("ssl.") || 
+			        key.startsWith("client.transport.") || 
+			        key.startsWith("cluster.name")) {
+			        if (this.props.getProperty(key).equalsIgnoreCase("true")) {
+			            settingsBuilder.put(key, true);
+			        } else if (this.props.getProperty(key).equalsIgnoreCase("false")) {
+                        settingsBuilder.put(key, false);
+			        } else {
+			            settingsBuilder.put(key, this.props.getProperty(key));
+			        }
+			    }
 			}
-			
-			Settings settings = settingsBuilder.build();
-			TransportClient client = TransportClient.builder().settings(settings).addPlugin(ShieldPlugin.class).build()
+			Client client = new PreBuiltSslTransportClient(settingsBuilder.build())
 				.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(host), port));
 			
+			if (this.props.getProperty("aaa.credential") != null) {
+			   int i = this.props.getProperty("aaa.credential").indexOf(":");
+			   if (i > 1) {
+			       String username = this.props.getProperty("aaa.credential").substring(0,i);
+			       String password = this.props.getProperty("aaa.credential").substring(i+1);
+                   client = client.filterWithHeader(Collections.singletonMap("Authorization", 
+                           PreBuiltSslTransportClient.encodeBasicHeader(username, password)));
+			   }
+			}
+				
+			
 			// add additional hosts if set in URL query part
+			/*
 			if(this.props.containsKey("es.hosts"))
 				for(String hostPort : this.props.getProperty("es.hosts").split(",")){
 					String newHost = hostPort.split(":")[0].trim();
@@ -116,7 +140,7 @@ public class ESConnection implements Connection{
 					client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(newHost), newPort));
 					logger.info("Adding additional ES host: "+hostPort);
 			}
-			
+			*/
 			// check if index exists
 			if(index != null){
 				boolean indexExists = client.admin().indices().exists(new IndicesExistsRequest(index)).actionGet().isExists();
